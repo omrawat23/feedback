@@ -24,7 +24,7 @@ export default function ThemeSwitch() {
     />
   )
 
-  const handleThemeChange = (checked: any) => {
+  const handleThemeChange = (checked: boolean) => {
     setTheme(checked ? 'dark' : 'light')
   }
 

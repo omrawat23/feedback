@@ -1,20 +1,25 @@
-// src/app/dashboard/page.tsx
 import NewProjBtn from "@/components/new-proj";
 import { db } from "@/db";
 import { projects } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import ProjectsList from "./projects-list";
 
-// Server component: Dashboard
-export default async function DashBoard({ searchParams }:any) {
-  const userId = searchParams.userId; // Access userId from the search parameters
+interface SearchParams {
+  userId?: string; 
+}
+
+export default async function DashBoard({ searchParams }: { searchParams: SearchParams }) {
+  const userId = searchParams.userId;
 
   if (!userId) {
-    return null; // Return null if userId is not available
+    return null;
   }
 
   // Database query to retrieve projects for the user
-  const userProjects = await db.select().from(projects).where(eq(projects.userId, userId));
+  const userProjects = await db
+    .select()
+    .from(projects)
+    .where(eq(projects.userId, userId));
 
   return (
     <div>

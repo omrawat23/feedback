@@ -16,7 +16,6 @@ import { auth } from '../firebase'
 export default function HeroSection() {
   const router = useRouter()
   const [user] = useAtom(userAtom)
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const userId = user?.uid
 
   const handleSignIn = async () => {
@@ -24,7 +23,6 @@ export default function HeroSection() {
       const provider = new GoogleAuthProvider()
       const result = await signInWithPopup(auth, provider)
       console.log('Sign in successful:', result.user)
-      setIsDialogOpen(false)
     } catch (error) {
       console.error('Error signing in with Google', error)
     }
