@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1725867259164,
+      "tag": "20240909073419_medical_nekra",
+      "breakpoints": true
+    }
+  ]
+}
