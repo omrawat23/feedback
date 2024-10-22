@@ -1,4 +1,3 @@
-
 "use client"
 import React from 'react'
 import MaxWidthWrapper from './MaxWidthWrapper'
@@ -29,12 +28,14 @@ import { userAtom, loadingAtom } from '@/store/userAtoms'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation';
 import Link from 'next/link'
+import { useTheme } from 'next-themes'  // Import useTheme hook
 
 const Header = () => {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [user] = useAtom(userAtom)
   const [loading] = useAtom(loadingAtom)
+  const { theme } = useTheme()  
   const userId = user?.uid;
 
   const handleSignIn = async () => {
@@ -43,10 +44,8 @@ const Header = () => {
       const result = await signInWithPopup(auth, provider)
       console.log('Sign in successful:', result.user)
       setIsDialogOpen(false)
-     
     } catch (error) {
       console.error('Error signing in with Google', error)
-   
     }
   }
 
@@ -68,18 +67,27 @@ const Header = () => {
     <div className="border-b">
       <MaxWidthWrapper>
         <div className='flex flex-row justify-between items-center m-4'>
-          <Link href='/' >
-       
-          <Image 
-            src='/log.svg' 
-            alt='Logo'
-            width={150}
-            height={200}
-            className="object-contain"
-          />
+          <Link href='/'>
 
+            {theme === 'dark' ? (
+              <Image 
+                src='/lodoo.svg'  // Use a different logo for dark mode
+                alt='Dark Logo'
+                width={150}
+                height={200}
+                className="object-contain"
+              />
+            ) : (
+              <Image 
+                src='/log.svg'  // Use a different logo for light mode
+                alt='Light Logo'
+                width={150}
+                height={200}
+                className="object-contain"
+              />
+            )}
           </Link>
-       
+
           <div className='flex flex-row gap-4 items-center'>
             <ThemeSwitch />
             {!loading && (
