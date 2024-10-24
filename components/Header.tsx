@@ -1,10 +1,16 @@
-"use client"
+'use client'
+
 import React from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useSession, signIn, signOut } from "next-auth/react"
+import { useTheme } from 'next-themes'
+import { FaGoogle } from "react-icons/fa"
+
 import MaxWidthWrapper from './MaxWidthWrapper'
 import ThemeSwitch from './ThemeSwitch'
-import Image from 'next/image'
 import { Button } from './ui/button'
-import { useAtom } from 'jotai'
 import {
   Dialog,
   DialogContent,
@@ -21,46 +27,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth'
-import { FaGoogle } from "react-icons/fa"
-import { auth } from '../firebase'
-import { userAtom, loadingAtom } from '@/store/userAtoms'
-import { toast } from 'sonner'
-import { useRouter } from 'next/navigation';
-import Link from 'next/link'
-import { useTheme } from 'next-themes'  // Import useTheme hook
 
-const Header = () => {
-  const router = useRouter();
+export default function Header() {
+  const router = useRouter()
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
-  const [user] = useAtom(userAtom)
-  const [loading] = useAtom(loadingAtom)
-  const { theme } = useTheme()  
-  const userId = user?.uid;
+  const { data: session, status } = useSession()
+  const { theme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
 
-  const handleSignIn = async () => {
-    try {
-      const provider = new GoogleAuthProvider()
-      const result = await signInWithPopup(auth, provider)
-      console.log('Sign in successful:', result.user)
-      setIsDialogOpen(false)
-    } catch (error) {
-      console.error('Error signing in with Google', error)
-    }
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const handleSignIn = () => {
+    signIn("google", { callbackUrl: "/" })
   }
 
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth)
-      toast.success('Successfully signed out!')
-    } catch (error) {
-      console.error('Error signing out', error)
-      toast.error('Failed to sign out. Please try again.')
-    }
+  const handleSignOut = () => {
+    signOut({ callbackUrl: "/" })
   }
 
   const handleProject = () => {
-    router.push(`/dashboard?userId=${userId}`);
+    router.push(`/dashboard?userId=${session?.user?.id}`)
   }
 
   return (
@@ -68,30 +56,19 @@ const Header = () => {
       <MaxWidthWrapper>
         <div className='flex flex-row justify-between items-center m-4'>
           <Link href='/'>
-
-            {theme === 'dark' ? (
-              <Image 
-                src='/lodoo.svg'  // Use a different logo for dark mode
-                alt='Dark Logo'
-                width={150}
-                height={200}
-                className="object-contain"
-              />
-            ) : (
-              <Image 
-                src='/log.svg'  // Use a different logo for light mode
-                alt='Light Logo'
-                width={150}
-                height={200}
-                className="object-contain"
-              />
-            )}
+            <Image 
+              src={mounted && theme === 'light' ? '/log.svg' : '/lodoo.svg'}
+              alt={mounted && theme === 'light' ? 'Light Logo' : 'Dark Logo'}
+              width={150}
+              height={200}
+              className="object-contain"
+            />
           </Link>
 
           <div className='flex flex-row gap-4 items-center'>
             <ThemeSwitch />
-            {!loading && (
-              user ? (
+            {status !== 'loading' && (
+              session ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button 
@@ -99,7 +76,7 @@ const Header = () => {
                       className="relative h-8 w-8 rounded-full"
                     >
                       <Image
-                        src={user.photoURL || '/default-avatar.png'}
+                        src={session.user?.image || '/default-avatar.png'}
                         alt="Profile"
                         className="rounded-full"
                         fill
@@ -109,8 +86,8 @@ const Header = () => {
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel>
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.displayName}</p>
-                        <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                        <p className="text-sm font-medium leading-none">{session.user?.name}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{session.user?.email}</p>
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
@@ -120,7 +97,6 @@ const Header = () => {
                     >
                      Projects
                     </DropdownMenuItem>
-         
                     <DropdownMenuItem 
                       onClick={handleSignOut}
                       className="text-red-600 cursor-pointer"
@@ -168,5 +144,3 @@ const Header = () => {
     </div>
   )
 }
-
-export default Header

@@ -2,20 +2,20 @@ import NewProjBtn from "@/components/new-proj";
 import { db } from "@/db";
 import { projects } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getSession } from "@/auth";
 import ProjectsList from "./projects-list";
 
-interface SearchParams {
-  userId?: string; 
-}
+export default async function Page() {
+  const session = await getSession();
 
-export default async function DashBoard({ searchParams }: { searchParams: SearchParams }) {
-  const userId = searchParams.userId;
-
+  // Ensure session and user ID are available
+  const userId = session?.user?.id;
+  
   if (!userId) {
     return null;
   }
 
-  // Database query to retrieve projects for the user
+  // Fetch user projects
   const userProjects = await db
     .select()
     .from(projects)

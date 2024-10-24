@@ -2,35 +2,25 @@
 
 import React from 'react'
 import { ArrowRightIcon } from "lucide-react"
-import { useAtom } from "jotai"
 import Link from "next/link"
 import { useRouter } from 'next/navigation'
+import { useSession, signIn } from "next-auth/react"
 
 import AnimatedShinyText from "@/components/ui/animated-shiny-text"
 import { Button } from "@/components/ui/button"
 import { BorderBeam } from "@/components/ui/border-beam"
-import { userAtom } from "@/store/userAtoms"
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth'
-import { auth } from '../firebase'
 
 export default function HeroSection() {
   const router = useRouter()
-  const [user] = useAtom(userAtom)
-  const userId = user?.uid
+  const { data: session } = useSession()
 
-  const handleSignIn = async () => {
-    try {
-      const provider = new GoogleAuthProvider()
-      const result = await signInWithPopup(auth, provider)
-      console.log('Sign in successful:', result.user)
-    } catch (error) {
-      console.error('Error signing in with Google', error)
-    }
+  const handleSignIn = () => {
+    signIn("google", { callbackUrl: "/" })
   }
 
   const handleDashboard = () => {
-    if (userId) {
-      router.push(`/dashboard?userId=${userId}`)
+    if (session?.user) {
+      router.push('/dashboard')
     }
   }
 
@@ -55,7 +45,7 @@ export default function HeroSection() {
 
         {/* Action Buttons */}
         <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 justify-center">
-          {user ? (
+          {session?.user ? (
             <>
               <Button onClick={handleDashboard} size="lg" className="w-full sm:w-auto">
                 Dashboard
