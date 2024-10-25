@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "../providers/providers";
-import AuthProvider from "./providers"
-import { getSession } from "@/auth"
+import AuthProvider from "./providers";
+import { getSession } from "@/auth";
 import { bric } from "@/utils/font";
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/toaster";
 import Header from "@/components/Header";
-import FeedbacifyWidget from '@/components/feedback';
+import dynamic from 'next/dynamic';
 
+// Dynamically import the widget with no SSR
+const FeedbackWidget = dynamic(
+  () => import('@/components/FeedbackWidget'),
+  { ssr: false }
+);
 
 export const metadata: Metadata = {
   title: "Feedbackify",
@@ -15,20 +20,17 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await getSession()
+  const session = await getSession();
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${bric} antialiased`}
-      >
+      <body className={`${bric} antialiased`}>
         <Providers>
-        <AuthProvider session={session}>
+          <AuthProvider session={session}>
             <Header />
-            <main>{children}
-            <FeedbacifyWidget projectId="21" />
-            </main>
+            <main>{children}</main>
             <Toaster />
+            <FeedbackWidget projectId={21} />
           </AuthProvider>
         </Providers>
       </body>

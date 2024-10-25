@@ -5,7 +5,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSession, signIn, signOut } from "next-auth/react"
-import { useTheme } from 'next-themes'
 import { FaGoogle } from "react-icons/fa"
 
 import MaxWidthWrapper from './MaxWidthWrapper'
@@ -32,8 +31,7 @@ export default function Header() {
   const router = useRouter()
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const { data: session, status } = useSession()
-  const { theme } = useTheme()
-  const [mounted, setMounted] = React.useState(false)
+  const [, setMounted] = React.useState(false)
 
   React.useEffect(() => {
     setMounted(true)
@@ -55,14 +53,27 @@ export default function Header() {
     <div className="border-b">
       <MaxWidthWrapper>
         <div className='flex flex-row justify-between items-center m-4'>
-          <Link href='/'>
-            <Image 
-              src={mounted && theme === 'light' ? '/log.svg' : '/lodoo.svg'}
-              alt={mounted && theme === 'light' ? 'Light Logo' : 'Dark Logo'}
-              width={150}
-              height={200}
-              className="object-contain"
-            />
+          <Link href='/' className="flex items-center space-x-2 text-foreground">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="text-primary"
+            >
+              <rect width="24" height="24" rx="4" fill="currentColor" />
+              <path
+                d="M6 6H18V16C18 17.1046 17.1046 18 16 18H8C6.89543 18 6 17.1046 6 16V6Z"
+                className="fill-background dark:fill-primary-foreground"
+              />
+              <rect x="8" y="8" width="8" height="1.5" rx="0.75" fill="currentColor" />
+              <rect x="8" y="11" width="8" height="1.5" rx="0.75" fill="currentColor" />
+              <rect x="8" y="14" width="5" height="1.5" rx="0.75" fill="currentColor" />
+            </svg>
+            <span className="text-lg font-semibold">
+              feedbackify
+            </span>
           </Link>
 
           <div className='flex flex-row gap-4 items-center'>
