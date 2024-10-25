@@ -1,5 +1,5 @@
 
-import { pgTable, serial, text, integer } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, numeric } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 export const projects = pgTable("projects", {
@@ -7,7 +7,7 @@ export const projects = pgTable("projects", {
   name: text("name"),
   description: text("description"),
   url: text("url"),
-  userId: integer("user_id"),
+  userId: numeric("user_id"),
 });
 
 export const projectsRelations = relations(projects, ({ many }) => ({
