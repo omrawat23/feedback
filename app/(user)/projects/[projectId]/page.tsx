@@ -76,6 +76,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           </CardContent>
         </Card>
 
+     {/* Actions Section */}
         <Card>
           <CardHeader>
             <CardTitle>Actions</CardTitle>

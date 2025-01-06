@@ -54,7 +54,7 @@ export default function Header() {
       <MaxWidthWrapper>
         <div className='flex flex-row justify-between items-center m-4'>
           <Link href='/' className="flex items-center space-x-2 text-foreground">
-            <svg
+           <svg
               width="24"
               height="24"
               viewBox="0 0 24 24"
@@ -82,8 +82,8 @@ export default function Header() {
               session ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       className="relative h-8 w-8 rounded-full"
                     >
                       <Image
@@ -102,13 +102,13 @@ export default function Header() {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onClick={handleProject}
                       className="cursor-pointer"
                     >
                      Projects
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onClick={handleSignOut}
                       className="text-red-600 cursor-pointer"
                     >
