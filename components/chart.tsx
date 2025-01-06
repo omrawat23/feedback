@@ -1,5 +1,4 @@
-"use client";
-
+"use client"
 import React, { useState, useEffect, useMemo } from "react";
 import { InferSelectModel } from "drizzle-orm";
 import { feedbacks } from "@/db/schema";
@@ -14,9 +13,8 @@ import {
   Tooltip,
   Legend,
   TooltipProps,
-  PieChart,
-  Pie,
-  Cell,
+  LineChart,
+  Line,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,19 +25,9 @@ interface ChartProps {
   data: Feedback[];
 }
 
-interface CustomAxisTickProps {
-  x: number;
-  y: number;
-  payload: {
-    value: string | number;
-  };
-}
-
 const chartConfig = {
   rating: { label: "User Ratings", color: "hsl(var(--primary))" },
 };
-
-const COLORS = ["#000000", "#333333", "#666666", "#999999", "#CCCCCC"];
 
 const CustomTooltip: React.FC<TooltipProps<number, string>> = ({
   active,
@@ -79,13 +67,12 @@ export default function Chart({ data }: ChartProps) {
 
   useEffect(() => {
     const updateDimensions = () => {
-      const isMobile = window.innerWidth < 640;
-      setDimensions({
-        width: window.innerWidth,
-        height: isMobile
-          ? Math.max(window.innerHeight * 0.8, 600)
-          : Math.min(window.innerHeight * 0.7, 500),
-      });
+      const width = window.innerWidth;
+      const height = Math.min(
+        width < 640 ? 300 : window.innerHeight * 0.6,
+        450
+      );
+      setDimensions({ width, height });
     };
 
     updateDimensions();
@@ -95,107 +82,84 @@ export default function Chart({ data }: ChartProps) {
 
   const isMobile = dimensions.width < 640;
 
-  const renderCustomAxisTick = ({ x, y, payload }: CustomAxisTickProps) => {
-    const isMobile = dimensions.width < 640;
-    const limit = isMobile ? 10 : 15;
-    const text =
-      typeof payload.value === "string" && payload.value.length > limit
-        ? `${payload.value.slice(0, limit)}...`
-        : payload.value;
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const customXAxisTick = (props: any) => {
+    const { x, y, payload } = props;
     return (
       <g transform={`translate(${x},${y})`}>
         <text
           x={0}
           y={0}
-          dy={isMobile ? 10 : 16}
-          textAnchor={isMobile ? "end" : "middle"}
+          dy={16}
+          dx={-2}
+          textAnchor="end"
           fill="hsl(var(--muted-foreground))"
-          fontSize={isMobile ? 10 : 12}
-          className="text-xs sm:text-sm"
+          fontSize={12}
+          transform="rotate(-90)"
         >
-          {text}
+          {!isMobile ? payload.value : ''}
         </text>
       </g>
     );
   };
 
-  const renderPieChart = () => (
-    <PieChart width={dimensions.width} height={dimensions.height}>
-      <Pie
-        data={processedData}
-        cx="50%"
-        cy="50%"
-        labelLine={false}
-        outerRadius={Math.min(dimensions.width, dimensions.height) / 6}
-        fill="#8884d8"
+  const chartMargins = useMemo(() => ({
+    top: 10,
+    right: 10,
+    bottom: 0,
+    left: 20,
+  }), []);
+
+  const renderChart = () => {
+    const ChartComponent = isMobile ? LineChart : BarChart;
+    const DataComponent = isMobile ? (
+      <Line
+        type="monotone"
         dataKey="rating"
-        label={({ user, rating }) => `${user}: ${rating}`}
+        stroke={chartConfig.rating.color}
+        strokeWidth={2}
+        dot={{ r: 4, fill: chartConfig.rating.color }}
+        name={chartConfig.rating.label}
+      />
+    ) : (
+      <Bar
+        dataKey="rating"
+        fill={chartConfig.rating.color}
+        name={chartConfig.rating.label}
+        radius={[4, 4, 0, 0]}
+      />
+    );
+
+    return (
+      <ChartComponent
+        data={processedData}
+        margin={chartMargins}
       >
-        {processedData.map((entry, index) => (
-          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-        ))}
-      </Pie>
-      <Tooltip content={<CustomTooltip />} />
-      <Legend layout="vertical" align="right" verticalAlign="middle" />
-    </PieChart>
-  );
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+        <XAxis
+          dataKey="user"
+          height={0}
+          tick={customXAxisTick}
+          interval={0}
+        />
+        <YAxis
+          domain={[0, 5]}
+          ticks={[0, 1, 2, 3, 4, 5]}
+          width={5}
+        />
+        <Tooltip content={<CustomTooltip />} />
+        <Legend />
+        {DataComponent}
+      </ChartComponent>
+    );
+  };
 
   return (
-    <div className="w-full h-full lg:mb-[-44px]">
-      <CardContent className="p-0 sm:p-6">
+    <div className="w-full h-full">
+      <CardContent className="p-0 sm:p-4">
         <ChartContainer config={chartConfig}>
           <ResponsiveContainer width="100%" height={dimensions.height}>
-            {isMobile ? (
-              renderPieChart()
-            ) : (
-              <BarChart
-                data={processedData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
-                />
-                <XAxis
-                  dataKey="user"
-                  interval={0}
-                  tick={renderCustomAxisTick}
-                  height={60}
-                  axisLine={{ stroke: "hsl(var(--border))" }}
-                />
-                <YAxis
-                  domain={[0, 5]}
-                  ticks={[0, 1, 2, 3, 4, 5]}
-                  axisLine={{ stroke: "hsl(var(--border))" }}
-                  tickLine={{ stroke: "hsl(var(--border))" }}
-                  label={{
-                    value: "Rating",
-                    angle: -90,
-                    position: "insideLeft",
-                    style: {
-                      textAnchor: "middle",
-                      fill: "hsl(var(--muted-foreground))",
-                      fontSize: 14,
-                    },
-                  }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend
-                  wrapperStyle={{
-                    paddingTop: "20px",
-                    fontSize: "14px",
-                    color: "hsl(var(--muted-foreground))",
-                  }}
-                />
-                <Bar
-                  dataKey="rating"
-                  fill={chartConfig.rating.color}
-                  name={chartConfig.rating.label}
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            )}
+            {renderChart()}
           </ResponsiveContainer>
         </ChartContainer>
       </CardContent>

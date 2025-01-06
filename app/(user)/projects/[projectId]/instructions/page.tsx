@@ -29,12 +29,20 @@ const CopyBtn = ({ text }: { text: string }) => {
 export default function Page({ params }: { params: { projectId: string } }) {
   const widgetUrl = process.env.NEXT_PUBLIC_WIDGET_URL || 'https://feedbacify-widget.vercel.app'
   const [embedType, setEmbedType] = useState<EmbedType>('html')
-  
+
   const htmlEmbedCode = `<my-widget project-id="${params.projectId}"></my-widget>\n<script src="${widgetUrl}/widget.umd.js"></script>`
-  
-  const reactEmbedCode = `import React, { useEffect } from 'react';
 
+  const reactEmbedCode = `// Option 1: Direct HTML Integration
+// Add this in index.html file:
+  <my-widget project-id="${params.projectId}"></my-widget>
+  <script async src="${widgetUrl}/widget.umd.js"></script>
+
+// Option 2: Reusable Component
+// FeedbackWidget.tsx
+
+// TypeScript declarations
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface IntrinsicElements {
       "my-widget": React.DetailedHTMLProps<
@@ -47,38 +55,25 @@ declare global {
   }
 }
 
-interface FeedbacifyWidgetProps {
-  projectId: string | number;
-}
-
-export default function FeedbacifyWidget({ projectId }: FeedbacifyWidgetProps) {
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = '${widgetUrl}/widget.umd.js';
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
+export default function FeedbackWidget({ projectId }: { projectId: string | number }) {
   return (
-    <div style={{ position: "fixed", bottom: "15px", right: "15px" }}>
+    <div>
       <my-widget project-id={projectId} />
+      <script async src="${widgetUrl}/widget.umd.js"></script>
     </div>
   );
 }
 
-// Then use it like this:
-<FeedbacifyWidget projectId={${params.projectId}} />
-`
+// Usage:
+import FeedbackWidget from './FeedbackWidget';
 
-  const nextjsEmbedCode = `'use client';
+<FeedbackWidget projectId="${params.projectId}" />`
 
-import { useEffect, useState } from 'react';
+  const nextjsEmbedCode = `// Create a component file
+// FeedbackWidget.tsx
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface IntrinsicElements {
       "my-widget": React.DetailedHTMLProps<
@@ -91,57 +86,28 @@ declare global {
   }
 }
 
-interface FeedbacifyWidgetProps {
-  projectId: string | number;
-}
-
-export default function FeedbacifyWidget({ projectId }: FeedbacifyWidgetProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    
-    const script = document.createElement('script');
-    script.src = '${widgetUrl}/widget.umd.js';
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
-  if (!mounted) return null;
-
+export default function FeedbackWidget({ projectId }: { projectId: string | number }) {
   return (
-    <div style={{ position: "fixed", bottom: "15px", right: "15px" }}>
+    <div>
       <my-widget project-id={projectId} />
+      <script async src="${widgetUrl}/widget.umd.js"></script>
     </div>
   );
 }
 
-// In your layout.tsx or page:
-import dynamic from 'next/dynamic'
+// Using in layout.tsx or any page:
+import FeedbackWidget from '../components/FeedbackWidget';
 
-const FeedbacifyWidget = dynamic(
-  () => import('./FeedbacifyWidget'),
-  { ssr: false }
-);
-
-// Then use it like this:
-<FeedbacifyWidget projectId={${params.projectId}} />
+// Add to your layout:
+<FeedbackWidget projectId="${params.projectId}" />
 `
 
   const getEmbedCode = () => {
     switch(embedType) {
-      case 'html':
-        return htmlEmbedCode;
-      case 'react':
-        return reactEmbedCode;
-      case 'nextjs':
-        return nextjsEmbedCode;
-      default:
-        return htmlEmbedCode;
+      case 'html': return htmlEmbedCode;
+      case 'react': return reactEmbedCode;
+      case 'nextjs': return nextjsEmbedCode;
+      default: return htmlEmbedCode;
     }
   }
 
@@ -150,46 +116,40 @@ const FeedbacifyWidget = dynamic(
       case 'html':
         return (
           <ol className="list-decimal list-inside text-gray-700 dark:text-gray-300 space-y-2">
-            <li>Copy the HTML code above.</li>
-            <li>Paste it into your website&apos;s HTML, just before the closing &lt;/body&gt; tag.</li>
-            <li>The feedback widget will automatically appear on your site.</li>
+            <li>Copy the code above</li>
+            <li>Paste before closing &lt;/body&gt; tag</li>
           </ol>
         );
       case 'react':
         return (
           <ol className="list-decimal list-inside text-gray-700 dark:text-gray-300 space-y-2">
-            <li>Copy the React component code above.</li>
-            <li>Create a new file in your React project (e.g., FeedbacifyWidget.tsx).</li>
-            <li>Paste the copied code into this new file.</li>
-            <li>Import and use the FeedbacifyWidget component in your desired location:</li>
-            <li className="ml-8">
-              <code className="bg-gray-200 dark:bg-gray-900 p-1 rounded">
-                {`import FeedbacifyWidget from './FeedbacifyWidget'`}
-              </code>
-            </li>
-            <li className="ml-8">
-              <code className="bg-gray-200 dark:bg-gray-900 p-1 rounded">
-                {`<FeedbacifyWidget projectId={${params.projectId}} />`}
-              </code>
+            <li>Choose an integration method:
+              <ul className="list-disc ml-8 space-y-2">
+                <li><strong>Basic:</strong> Copy HTML directly into index.html file before closing &lt;/body&gt; tag</li>
+                <li><strong>Component:</strong>
+                  <ol className="list-decimal ml-8">
+                    <li>Create FeedbackWidget.tsx</li>
+                    <li>Add TypeScript declarations (if using TS)</li>
+                    <li>Import and use where needed</li>
+                  </ol>
+                </li>
+              </ul>
             </li>
           </ol>
         );
       case 'nextjs':
         return (
           <ol className="list-decimal list-inside text-gray-700 dark:text-gray-300 space-y-2">
-            <li>Copy the Next.js component code above.</li>
-            <li>Create a new file in your Next.js project (e.g., FeedbacifyWidget.tsx).</li>
-            <li>Paste the copied code into this new file.</li>
-            <li>Import the widget using dynamic import in your layout or page file to prevent hydration errors.</li>
-            <li className="ml-8">
-              <code className="bg-gray-200 dark:bg-gray-900 p-1 rounded">
-                {`const FeedbacifyWidget = dynamic(() => import('./FeedbacifyWidget'), { ssr: false });`}
-              </code>
+            <li>Project Setup:
+              <ul className="list-disc ml-8">
+                <li>Create a component(FeedbackWidget.tsx) file</li>
+              </ul>
             </li>
-            <li className="ml-8">
-              <code className="bg-gray-200 dark:bg-gray-900 p-1 rounded">
-                {`<FeedbacifyWidget projectId={${params.projectId}} />`}
-              </code>
+            <li>Copy component code with declarations</li>
+            <li>Integration:
+              <ul className="list-disc ml-8">
+                <li>Add to layout.tsx or page.tsx</li>
+              </ul>
             </li>
           </ol>
         );
@@ -198,12 +158,9 @@ const FeedbacifyWidget = dynamic(
 
   const getNotes = () => {
     switch(embedType) {
-      case 'html':
-        return "Make sure to test the widget on your site to ensure it's working correctly. If you encounter any issues, please check your console for errors or contact support.";
-      case 'react':
-        return "This implementation is optimized for standard React applications. The widget script is loaded only once when the component mounts. If you're using TypeScript, the type declarations are included. If you're using JavaScript, you can remove the declare global block.";
-      case 'nextjs':
-        return "This implementation includes proper client-side only rendering to prevent hydration errors in Next.js. The widget is loaded dynamically with SSR disabled, and the component uses a mounted state to ensure proper client-side rendering. If you encounter any problems, check your browser console for errors or contact our support team.";
+      case 'html': return "Verify the widget appears on your site after implementation.";
+      case 'react': return "Basic integration is quickest. Component approach offers better reusability and TypeScript support.";
+      case 'nextjs': return "Works in both pages and app directory.";
     }
   }
 
@@ -211,26 +168,11 @@ const FeedbacifyWidget = dynamic(
     <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-black shadow-lg rounded-lg">
       <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Start Collecting Feedback</h1>
       <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">Embed the code in your site to start gathering valuable insights.</p>
-      
+
       <div className="flex space-x-4 mb-4">
-        <Button
-          onClick={() => setEmbedType('html')}
-          variant={embedType === 'html' ? 'default' : 'outline'}
-        >
-          HTML
-        </Button>
-        <Button
-          onClick={() => setEmbedType('react')}
-          variant={embedType === 'react' ? 'default' : 'outline'}
-        >
-          React
-        </Button>
-        <Button
-          onClick={() => setEmbedType('nextjs')}
-          variant={embedType === 'nextjs' ? 'default' : 'outline'}
-        >
-          Next.js
-        </Button>
+        <Button onClick={() => setEmbedType('html')} variant={embedType === 'html' ? 'default' : 'outline'}>HTML</Button>
+        <Button onClick={() => setEmbedType('react')} variant={embedType === 'react' ? 'default' : 'outline'}>React</Button>
+        <Button onClick={() => setEmbedType('nextjs')} variant={embedType === 'nextjs' ? 'default' : 'outline'}>Next.js</Button>
       </div>
 
       <div className="bg-gray-100 dark:bg-gray-900 p-6 rounded-lg relative">
@@ -244,7 +186,7 @@ const FeedbacifyWidget = dynamic(
         <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Instructions:</h2>
         {getInstructions()}
       </div>
-      
+
       <div className="mt-8 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
         <p className="text-gray-800 dark:text-gray-200">
           <strong>Note:</strong>{' '}

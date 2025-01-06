@@ -7,14 +7,8 @@ import { getSession } from "@/auth";
 import { bric } from "@/utils/font";
 import { Toaster } from "@/components/ui/toaster";
 import Header from "@/components/Header";
-import dynamic from 'next/dynamic';
 import { Analytics } from "@vercel/analytics/react"
-
-// Dynamically import the widget with no SSR
-const FeedbackWidget = dynamic(
-  () => import('@/components/FeedbackWidget'),
-  { ssr: false }
-);
+import FeedbackWidget from "@/components/FeedbackWidget";
 
 export const metadata: Metadata = {
   title: siteConfig.name,
