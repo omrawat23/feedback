@@ -8,6 +8,7 @@ import { bric } from "@/utils/font";
 import { Toaster } from "@/components/ui/toaster";
 import Header from "@/components/Header";
 import dynamic from 'next/dynamic';
+import { Analytics } from "@vercel/analytics/react"
 
 // Dynamically import the widget with no SSR
 const FeedbackWidget = dynamic(
@@ -18,9 +19,6 @@ const FeedbackWidget = dynamic(
 export const metadata: Metadata = {
   title: siteConfig.name,
   description: siteConfig.description,
-  // icons: {
-  //   icon: "/icon.svg",
-  // },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -33,6 +31,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <AuthProvider session={session}>
             <Header />
             <main>{children}</main>
+            <Analytics />
             <Toaster />
             <FeedbackWidget projectId={21} />
           </AuthProvider>
