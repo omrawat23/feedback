@@ -1,4 +1,5 @@
 "use client"
+
 import React, { useState, useEffect, useMemo } from "react";
 import { InferSelectModel } from "drizzle-orm";
 import { feedbacks } from "@/db/schema";
@@ -15,6 +16,8 @@ import {
   TooltipProps,
   LineChart,
   Line,
+  AreaChart,
+  Area,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,13 +59,35 @@ export default function Chart({ data }: ChartProps) {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   const processedData = useMemo(() => {
-    return data
+    const filteredData = data
       .map((feedback, index) => ({
         user: feedback.userName || `User ${index + 1}`,
-        rating: feedback.rating !== null ? feedback.rating : null,
+        rating: feedback.rating,
         message: feedback.message || "No message provided",
       }))
-      .filter((item) => item.rating !== null);
+      .filter((item): item is { user: string; rating: number; message: string } =>
+        item.rating !== null && item.rating !== undefined
+      );
+
+    // If there are more than 100 data points, aggregate the data
+    if (filteredData.length > 100) {
+      const aggregatedData = [];
+      const chunkSize = Math.ceil(filteredData.length / 100);
+
+      for (let i = 0; i < filteredData.length; i += chunkSize) {
+        const chunk = filteredData.slice(i, i + chunkSize);
+        const avgRating = chunk.reduce((sum, item) => sum + item.rating, 0) / chunk.length;
+        aggregatedData.push({
+          user: `Group ${Math.floor(i / chunkSize) + 1}`,
+          rating: Number(avgRating.toFixed(2)),
+          message: `Average of ${chunk.length} ratings`,
+        });
+      }
+
+      return aggregatedData;
+    }
+
+    return filteredData;
   }, [data]);
 
   useEffect(() => {
@@ -81,6 +106,7 @@ export default function Chart({ data }: ChartProps) {
   }, []);
 
   const isMobile = dimensions.width < 640;
+  const isLargeDataset = processedData.length > 100;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const customXAxisTick = (props: any) => {
@@ -111,24 +137,43 @@ export default function Chart({ data }: ChartProps) {
   }), []);
 
   const renderChart = () => {
-    const ChartComponent = isMobile ? LineChart : BarChart;
-    const DataComponent = isMobile ? (
-      <Line
-        type="monotone"
-        dataKey="rating"
-        stroke={chartConfig.rating.color}
-        strokeWidth={2}
-        dot={{ r: 4, fill: chartConfig.rating.color }}
-        name={chartConfig.rating.label}
-      />
-    ) : (
-      <Bar
-        dataKey="rating"
-        fill={chartConfig.rating.color}
-        name={chartConfig.rating.label}
-        radius={[4, 4, 0, 0]}
-      />
-    );
+    let ChartComponent, DataComponent;
+
+    if (isLargeDataset) {
+      ChartComponent = AreaChart;
+      DataComponent = (
+        <Area
+          type="monotone"
+          dataKey="rating"
+          stroke={chartConfig.rating.color}
+          fill={chartConfig.rating.color}
+          fillOpacity={0.3}
+          name={chartConfig.rating.label}
+        />
+      );
+    } else if (isMobile) {
+      ChartComponent = LineChart;
+      DataComponent = (
+        <Line
+          type="monotone"
+          dataKey="rating"
+          stroke={chartConfig.rating.color}
+          strokeWidth={2}
+          dot={{ r: 4, fill: chartConfig.rating.color }}
+          name={chartConfig.rating.label}
+        />
+      );
+    } else {
+      ChartComponent = BarChart;
+      DataComponent = (
+        <Bar
+          dataKey="rating"
+          fill={chartConfig.rating.color}
+          name={chartConfig.rating.label}
+          radius={[4, 4, 0, 0]}
+        />
+      );
+    }
 
     return (
       <ChartComponent
@@ -166,3 +211,4 @@ export default function Chart({ data }: ChartProps) {
     </div>
   );
 }
+
